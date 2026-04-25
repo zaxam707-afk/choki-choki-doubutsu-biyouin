@@ -267,6 +267,23 @@
     box-shadow: 0 4px 0 rgba(0,0,0,0.1);
     z-index: 10;
   }
+  .exit-button {
+    position: absolute;
+    bottom: 12px; right: 12px;
+    background: #fff;
+    border: none;
+    width: 48px; height: 48px;
+    border-radius: 999px;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--pink-dark);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    cursor: pointer;
+    z-index: 11;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .exit-button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
 
   /* ---- Countdown overlay ---- */
   .countdown {
@@ -409,6 +426,7 @@
       </div>
       <canvas id="gameCanvas"></canvas>
       <div class="progress-ring" id="progressText">0%</div>
+      <button class="exit-button" id="btnExit" aria-label="ホームに戻る" title="ホームに戻る">🏠</button>
       <div class="cheer left">
         <div class="cheer-bubble">がんばれ！</div>
         <span class="cheer-char">🧑‍🦰</span>
@@ -495,32 +513,29 @@
   }
 
   // ========= Animals =========
-  // ear:     'droopy' | 'triangle' | 'round' | 'long' | 'pig'
-  // accent:  'mask' | 'panda_eye' | 'mane' | 'stripes_body' | 'face_stripes'
-  //          | 'fox_face' | 'pig_nose' | 'cow_spots'
-  // tail:    'curl' | 'bushy' | 'pompom' | 'straight' | 'short' | 'none'
+  // image-based animals (PNG in assets/)
   const ANIMALS = [
-    { id:'corgi',    name:'コーギー',     emoji:'🐶', body:'#f4a259', furColor:'#c67c33', belly:'#fff4e0', ear:'triangle', tail:'curl' },
-    { id:'poodle',   name:'プードル',     emoji:'🐩', body:'#f7d6e0', furColor:'#d49cb6', belly:'#fff5f9', ear:'round',    tail:'pompom' },
-    { id:'shiba',    name:'しばいぬ',     emoji:'🐕', body:'#e88a46', furColor:'#b85e1e', belly:'#fff4e0', ear:'triangle', tail:'curl',     accent:'mask' },
-    { id:'husky',    name:'ハスキー',     emoji:'🐺', body:'#b0bac4', furColor:'#6a757f', belly:'#ffffff', ear:'triangle', tail:'bushy' },
-    { id:'maltese',  name:'マルチーズ',   emoji:'🦮', body:'#fff8e7', furColor:'#e6d6b8', belly:'#ffffff', ear:'droopy',   tail:'pompom' },
-    { id:'persian',  name:'ペルシャねこ', emoji:'🐱', body:'#ecd8ae', furColor:'#b89a6a', belly:'#fff5e0', ear:'triangle', tail:'bushy' },
-    { id:'blackcat', name:'くろねこ',     emoji:'🐈‍⬛', body:'#3d3d3d', furColor:'#1a1a1a', belly:'#5a5a5a', ear:'triangle', tail:'straight' },
-    { id:'tabby',    name:'とらねこ',     emoji:'🐈', body:'#d49a5c', furColor:'#a06838', belly:'#fff4e0', ear:'triangle', tail:'straight', accent:'face_stripes' },
-    { id:'rabbit',   name:'うさぎ',       emoji:'🐰', body:'#ffffff', furColor:'#dedede', belly:'#fff5f9', ear:'long',     tail:'short',    innerEar:'#ffb6c1' },
-    { id:'hamster',  name:'ハムスター',   emoji:'🐹', body:'#e8b87a', furColor:'#b88a48', belly:'#fff4e0', ear:'round',    tail:'short' },
-    { id:'bear',     name:'くま',         emoji:'🐻', body:'#a06a3a', furColor:'#6e431c', belly:'#f5dcb8', ear:'round',    tail:'short' },
-    { id:'panda',    name:'パンダ',       emoji:'🐼', body:'#ffffff', furColor:'#d5d5d5', belly:'#ffffff', ear:'round',    tail:'short',    accent:'panda_eye', earColor:'#2a2a2a', innerEar:'#2a2a2a' },
-    { id:'koala',    name:'コアラ',       emoji:'🐨', body:'#9ea7b3', furColor:'#6b737f', belly:'#dce0e6', ear:'round',    tail:'none',     innerEar:'#d48aa8' },
-    { id:'lion',     name:'ライオン',     emoji:'🦁', body:'#f4c16b', furColor:'#c48a2a', belly:'#fff1cf', ear:'triangle', tail:'straight', accent:'mane' },
-    { id:'tiger',    name:'とら',         emoji:'🐯', body:'#f2a13a', furColor:'#c0731a', belly:'#fff4e0', ear:'triangle', tail:'straight', accent:'stripes_body' },
-    { id:'fox',      name:'きつね',       emoji:'🦊', body:'#f08a4a', furColor:'#c05a20', belly:'#fffcf0', ear:'triangle', tail:'bushy',    accent:'fox_face' },
-    { id:'sheep',    name:'ひつじ',       emoji:'🐑', body:'#fffbef', furColor:'#ebe2d0', belly:'#ffffff', ear:'round',    tail:'short' },
-    { id:'alpaca',   name:'アルパカ',     emoji:'🦙', body:'#ecdcbe', furColor:'#b89a6a', belly:'#fffaf0', ear:'round',    tail:'short' },
-    { id:'pig',      name:'ぶた',         emoji:'🐷', body:'#f8c4cd', furColor:'#d897a0', belly:'#fde4e9', ear:'pig',      tail:'curl',     accent:'pig_nose' },
-    { id:'cow',      name:'うし',         emoji:'🐮', body:'#ffffff', furColor:'#e0e0e0', belly:'#ffffff', ear:'round',    tail:'straight', accent:'cow_spots' },
+    { id:'shiba',     name:'しばいぬ',       emoji:'🐶', image:'assets/shiba.png',     furColor:'#b85e1e' },
+    { id:'tabby',     name:'とらねこ',       emoji:'🐈', image:'assets/tabby.png',     furColor:'#c08038' },
+    { id:'monkey',    name:'さる',           emoji:'🐒', image:'assets/monkey.png',    furColor:'#7a4a28' },
+    { id:'rabbit',    name:'うさぎ',         emoji:'🐰', image:'assets/rabbit.png',    furColor:'#cfcfcf' },
+    { id:'panda',     name:'パンダ',         emoji:'🐼', image:'assets/panda.png',     furColor:'#888888' },
+    { id:'lion',      name:'ライオン',       emoji:'🦁', image:'assets/lion.png',      furColor:'#c48a2a' },
+    { id:'tiger',     name:'とら',           emoji:'🐯', image:'assets/tiger.png',     furColor:'#c0731a' },
+    { id:'red_panda', name:'レッサーパンダ', emoji:'🦝', image:'assets/red_panda.png', furColor:'#a04020' },
+    { id:'elephant',  name:'ぞう',           emoji:'🐘', image:'assets/elephant.png', furColor:'#5a6a6a' },
   ];
+
+  // ========= Image preloader =========
+  const imageCache = {};
+  function loadImage(src) {
+    if (imageCache[src]) return imageCache[src];
+    const img = new Image();
+    img.src = src;
+    imageCache[src] = img;
+    return img;
+  }
+  ANIMALS.forEach(a => loadImage(a.image));
 
   // ========= Render selection =========
   const grid = document.getElementById('animalGrid');
@@ -557,6 +572,15 @@
     playDing(700);
     showScene('select');
   });
+  document.getElementById('btnExit').addEventListener('click', () => {
+    if (running) {
+      running = false;
+      cancelAnimationFrame(rafId);
+    }
+    canvas.classList.remove('swiping');
+    playDing(440);
+    showScene('title');
+  });
 
   // ========= Drawing the animal =========
   // The "clean" animal is drawn as the background of the canvas.
@@ -580,15 +604,13 @@
 
   function drawCleanAnimal(ctx, w, h, animal) {
     ctx.save();
-
-    // ----- Background studio -----
+    // background studio
     const bg = ctx.createLinearGradient(0, 0, 0, h);
     bg.addColorStop(0, '#ffeef5');
     bg.addColorStop(0.6, '#fff2e2');
     bg.addColorStop(1, '#ffe4c4');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
-    // floor
     ctx.fillStyle = '#f0c588';
     ctx.fillRect(0, h * 0.80, w, h * 0.20);
     ctx.strokeStyle = 'rgba(255,255,255,0.4)';
@@ -600,587 +622,70 @@
       ctx.stroke();
     }
 
-    const cx = w / 2, cy = h * 0.62;
-    const bodyR = Math.min(w, h) * 0.23;
-
-    // ----- sketchy ink outline helper -----
-    const inkColor = 'rgba(60,35,20,0.55)';
-    const inkLW = Math.max(1.6, Math.min(w, h) * 0.0055);
-    function inkStroke(pathFn) {
-      const offsets = [[0.6, 0.4], [-0.4, 0.5], [0.2, -0.4]];
-      ctx.save();
-      ctx.strokeStyle = inkColor;
-      ctx.lineWidth = inkLW;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      for (const [dx, dy] of offsets) {
-        ctx.save(); ctx.translate(dx, dy);
-        ctx.beginPath(); pathFn();
-        ctx.stroke();
-        ctx.restore();
-      }
-      ctx.restore();
-    }
-    // radial gradient fill for volume
-    function shadedFill(pathFn, baseCol, gcx, gcy, gr) {
-      const light = shade(baseCol, 0.18);
-      const dark  = shade(baseCol, -0.22);
-      const grad = ctx.createRadialGradient(gcx - gr*0.25, gcy - gr*0.3, gr*0.05, gcx, gcy, gr);
-      grad.addColorStop(0, light);
-      grad.addColorStop(0.6, baseCol);
-      grad.addColorStop(1, dark);
-      ctx.save();
-      ctx.fillStyle = grad;
-      ctx.beginPath(); pathFn();
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // shadow under feet
+    const cx = w / 2;
+    const cy = h * 0.55;
     ctx.fillStyle = 'rgba(0,0,0,0.14)';
     ctx.beginPath();
-    ctx.ellipse(cx, h * 0.84, bodyR * 1.4, bodyR * 0.2, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, h * 0.84, Math.min(w, h) * 0.32, Math.min(w, h) * 0.04, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const ear = animal.ear || 'triangle';
-    const earColor = animal.earColor || animal.body;
-    const innerEar = animal.innerEar || '#ffb6c1';
-    const accent = animal.accent || null;
+    const img = loadImage(animal.image);
+    const targetSize = Math.min(w, h) * 0.78;
+    let halfW = targetSize / 2;
+    let halfH = targetSize / 2;
 
-    // ===== TAIL (behind body) =====
-    drawTail();
-    function drawTail() {
-      const t = animal.tail;
-      if (!t || t === 'none') return;
-      if (t === 'curl') {
-        const p = () => {
-          ctx.moveTo(cx + bodyR * 1.08, cy + bodyR * 0.18);
-          ctx.bezierCurveTo(cx + bodyR * 1.55, cy + bodyR * 0.05,
-                            cx + bodyR * 1.6,  cy - bodyR * 0.45,
-                            cx + bodyR * 1.15, cy - bodyR * 0.55);
-          ctx.bezierCurveTo(cx + bodyR * 0.85, cy - bodyR * 0.55,
-                            cx + bodyR * 0.85, cy - bodyR * 0.25,
-                            cx + bodyR * 1.05, cy - bodyR * 0.05);
-          ctx.bezierCurveTo(cx + bodyR * 1.15, cy + bodyR * 0.05,
-                            cx + bodyR * 1.18, cy + bodyR * 0.15,
-                            cx + bodyR * 1.08, cy + bodyR * 0.18);
-        };
-        shadedFill(p, animal.body, cx + bodyR * 1.2, cy - bodyR * 0.3, bodyR * 0.55);
-        inkStroke(p);
-        // white tuft for shiba / corgi
-        if (accent === 'mask' || animal.id === 'corgi') {
-          ctx.fillStyle = animal.belly;
-          ctx.beginPath();
-          ctx.arc(cx + bodyR * 1.15, cy - bodyR * 0.55, bodyR * 0.2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (t === 'pompom') {
-        const p = () => ctx.arc(cx + bodyR * 1.18, cy - bodyR * 0.2, bodyR * 0.26, 0, Math.PI * 2);
-        shadedFill(p, animal.body, cx + bodyR * 1.1, cy - bodyR * 0.3, bodyR * 0.4);
-        inkStroke(p);
-      } else if (t === 'bushy') {
-        const p = () => ctx.ellipse(cx + bodyR * 1.2, cy + bodyR * 0.05, bodyR * 0.4, bodyR * 0.22, -0.45, 0, Math.PI * 2);
-        shadedFill(p, animal.body, cx + bodyR * 1.05, cy - bodyR * 0.1, bodyR * 0.5);
-        inkStroke(p);
-        if (animal.id === 'fox') {
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(cx + bodyR * 1.5, cy - bodyR * 0.15, bodyR * 0.16, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (animal.id === 'husky') {
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.ellipse(cx + bodyR * 1.4, cy + bodyR * 0.05, bodyR * 0.2, bodyR * 0.12, -0.45, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (t === 'straight') {
-        const p = () => ctx.ellipse(cx + bodyR * 1.25, cy + bodyR * 0.1, bodyR * 0.34, bodyR * 0.08, -0.55, 0, Math.PI * 2);
-        shadedFill(p, animal.body, cx + bodyR * 1.15, cy + bodyR * 0.05, bodyR * 0.4);
-        inkStroke(p);
-        if (accent === 'cow_spots' || accent === 'mane') {
-          ctx.fillStyle = accent === 'mane' ? '#c48a2a' : '#2b2b2b';
-          ctx.beginPath();
-          ctx.arc(cx + bodyR * 1.5, cy - bodyR * 0.1, bodyR * 0.13, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (t === 'short') {
-        const p = () => ctx.arc(cx + bodyR * 1.04, cy + bodyR * 0.08, bodyR * 0.14, 0, Math.PI * 2);
-        shadedFill(p, animal.body, cx + bodyR, cy, bodyR * 0.2);
-        inkStroke(p);
-      }
-    }
-
-    // ===== BODY (pear shape, sitting) =====
-    const bodyPath = () => {
-      ctx.moveTo(cx - bodyR * 1.2, cy + bodyR * 0.85);
-      ctx.bezierCurveTo(cx - bodyR * 1.45, cy + bodyR * 0.45,
-                        cx - bodyR * 1.3,  cy - bodyR * 0.45,
-                        cx - bodyR * 0.85, cy - bodyR * 0.75);
-      ctx.bezierCurveTo(cx - bodyR * 0.4,  cy - bodyR * 0.9,
-                        cx + bodyR * 0.4,  cy - bodyR * 0.9,
-                        cx + bodyR * 0.85, cy - bodyR * 0.75);
-      ctx.bezierCurveTo(cx + bodyR * 1.3,  cy - bodyR * 0.45,
-                        cx + bodyR * 1.45, cy + bodyR * 0.45,
-                        cx + bodyR * 1.2,  cy + bodyR * 0.85);
-      ctx.closePath();
-    };
-    shadedFill(bodyPath, animal.body, cx - bodyR * 0.3, cy - bodyR * 0.25, bodyR * 1.7);
-    inkStroke(bodyPath);
-
-    // Chest fluff / belly (white puff)
-    const bellyPath = () => ctx.ellipse(cx, cy + bodyR * 0.2, bodyR * 0.75, bodyR * 0.7, 0, 0, Math.PI * 2);
-    shadedFill(bellyPath, animal.belly, cx - bodyR * 0.1, cy, bodyR * 0.9);
-
-    // Body accents
-    if (accent === 'cow_spots') {
-      ctx.fillStyle = '#2b2b2b';
-      const spots = [[-0.45,-0.3,0.24,0.18],[0.5,0.05,0.22,0.16],[-0.65,0.45,0.18,0.13],[0.3,0.55,0.18,0.13]];
-      spots.forEach(([dx,dy,rx,ry])=>{
-        ctx.beginPath();
-        ctx.ellipse(cx+dx*bodyR, cy+dy*bodyR, rx*bodyR, ry*bodyR, dx*0.5, 0, Math.PI*2);
-        ctx.fill();
-      });
-    } else if (accent === 'stripes_body') {
-      ctx.fillStyle = 'rgba(42,26,18,0.78)';
-      for (let i = 0; i < 5; i++) {
-        const y = cy - bodyR * 0.6 + (i / 4) * bodyR * 1.2;
-        const widen = Math.cos(((i / 4) - 0.5) * Math.PI) * 0.9 + 0.15;
-        ctx.beginPath();
-        ctx.ellipse(cx - bodyR * 0.9, y, bodyR * 0.07, bodyR * 0.15 * widen, -0.1, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(cx + bodyR * 0.9, y, bodyR * 0.07, bodyR * 0.15 * widen, 0.1, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // ===== Front paws =====
-    const pawColor = (accent === 'mask') ? animal.belly : animal.body;
-    const leftPaw  = () => ctx.ellipse(cx - bodyR * 0.5, cy + bodyR * 0.95, bodyR * 0.23, bodyR * 0.3, 0, 0, Math.PI * 2);
-    const rightPaw = () => ctx.ellipse(cx + bodyR * 0.5, cy + bodyR * 0.95, bodyR * 0.23, bodyR * 0.3, 0, 0, Math.PI * 2);
-    shadedFill(leftPaw,  pawColor, cx - bodyR * 0.55, cy + bodyR * 0.85, bodyR * 0.4);
-    shadedFill(rightPaw, pawColor, cx + bodyR * 0.45, cy + bodyR * 0.85, bodyR * 0.4);
-    inkStroke(leftPaw);
-    inkStroke(rightPaw);
-    // toe marks
-    ctx.strokeStyle = 'rgba(80,50,30,0.4)';
-    ctx.lineWidth = inkLW * 0.8;
-    [cx - bodyR * 0.5, cx + bodyR * 0.5].forEach(px => {
-      for (let t = -1; t <= 1; t++) {
-        ctx.beginPath();
-        ctx.moveTo(px + t * bodyR * 0.08, cy + bodyR * 1.12);
-        ctx.lineTo(px + t * bodyR * 0.08, cy + bodyR * 1.2);
-        ctx.stroke();
-      }
-    });
-
-    // ===== HEAD =====
-    const headR = bodyR * 0.85;
-    const hy = cy - bodyR * 1.05;
-
-    // Mane (lion) — behind head
-    if (accent === 'mane') {
-      ctx.fillStyle = '#c48a2a';
-      for (let i = 0; i < 22; i++) {
-        const ang = (i / 22) * Math.PI * 2;
-        const rr = headR * 1.4;
-        ctx.beginPath();
-        ctx.arc(cx + Math.cos(ang) * rr, hy + Math.sin(ang) * rr, headR * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.fillStyle = '#d9a14a';
-      ctx.beginPath();
-      ctx.arc(cx, hy, headR * 1.22, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Ears BEHIND head (round, droopy, long)
-    function drawEarRound(side) {
-      const sx = cx + side * headR * 0.7;
-      const sy = hy - headR * 0.55;
-      const p = () => ctx.arc(sx, sy, headR * 0.34, 0, Math.PI * 2);
-      ctx.save();
-      ctx.fillStyle = earColor;
-      ctx.beginPath(); p(); ctx.fill();
-      ctx.restore();
-      inkStroke(p);
-      ctx.fillStyle = innerEar;
-      ctx.beginPath(); ctx.arc(sx, sy, headR * 0.17, 0, Math.PI * 2); ctx.fill();
-    }
-    function drawEarDroopy(side) {
-      const sx = cx + side * headR * 0.9;
-      const sy = hy + headR * 0.12;
-      const p = () => ctx.ellipse(sx, sy, headR * 0.32, headR * 0.6, side * 0.35, 0, Math.PI * 2);
-      shadedFill(p, animal.body, sx, sy - headR * 0.2, headR * 0.6);
-      inkStroke(p);
-      ctx.fillStyle = innerEar;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy + headR * 0.1, headR * 0.14, headR * 0.34, side * 0.35, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    function drawEarLong(side) {
-      const sx = cx + side * headR * 0.35;
-      const sy = hy - headR * 1.25;
-      const p = () => ctx.ellipse(sx, sy, headR * 0.17, headR * 0.72, side * 0.12, 0, Math.PI * 2);
-      shadedFill(p, animal.body, sx, sy, headR * 0.7);
-      inkStroke(p);
-      ctx.fillStyle = innerEar;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy + headR * 0.13, headR * 0.08, headR * 0.5, side * 0.12, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    if (ear === 'round')  { drawEarRound(-1);  drawEarRound(1); }
-    if (ear === 'droopy') { drawEarDroopy(-1); drawEarDroopy(1); }
-    if (ear === 'long')   { drawEarLong(-1);   drawEarLong(1); }
-
-    // Head fill (round)
-    const headPath = () => ctx.ellipse(cx, hy, headR, headR * 1.02, 0, 0, Math.PI * 2);
-    shadedFill(headPath, animal.body, cx - headR * 0.25, hy - headR * 0.3, headR * 1.3);
-    inkStroke(headPath);
-
-    // Face accents
-    if (accent === 'fox_face') {
-      ctx.fillStyle = animal.belly;
-      ctx.beginPath();
-      ctx.ellipse(cx, hy + headR * 0.38, headR * 0.58, headR * 0.38, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // cheek triangles
-      ctx.beginPath();
-      ctx.moveTo(cx - headR * 0.3, hy);
-      ctx.lineTo(cx - headR * 0.55, hy + headR * 0.3);
-      ctx.lineTo(cx - headR * 0.25, hy + headR * 0.45);
-      ctx.closePath(); ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(cx + headR * 0.3, hy);
-      ctx.lineTo(cx + headR * 0.55, hy + headR * 0.3);
-      ctx.lineTo(cx + headR * 0.25, hy + headR * 0.45);
-      ctx.closePath(); ctx.fill();
-    } else if (accent === 'mask') {
-      // shiba-style white muzzle + cheeks + brow patches
-      ctx.fillStyle = animal.belly;
-      // big lower muzzle patch
-      ctx.beginPath();
-      ctx.ellipse(cx, hy + headR * 0.32, headR * 0.58, headR * 0.45, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // cheek blobs
-      ctx.beginPath();
-      ctx.ellipse(cx - headR * 0.55, hy + headR * 0.15, headR * 0.22, headR * 0.28, -0.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx + headR * 0.55, hy + headR * 0.15, headR * 0.22, headR * 0.28, 0.2, 0, Math.PI * 2);
-      ctx.fill();
-      // eyebrow patches (like shiba's above-eye white)
-      ctx.beginPath();
-      ctx.arc(cx - headR * 0.3, hy - headR * 0.3, headR * 0.12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx + headR * 0.3, hy - headR * 0.3, headR * 0.12, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (accent === 'panda_eye') {
-      ctx.fillStyle = '#2a2a2a';
-      ctx.beginPath();
-      ctx.ellipse(cx - headR * 0.33, hy - headR * 0.02, headR * 0.22, headR * 0.27, -0.35, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx + headR * 0.33, hy - headR * 0.02, headR * 0.22, headR * 0.27, 0.35, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (accent === 'face_stripes') {
-      ctx.fillStyle = 'rgba(42,26,18,0.7)';
-      for (let i = -1; i <= 1; i++) {
-        ctx.beginPath();
-        ctx.ellipse(cx + i * headR * 0.28, hy - headR * 0.55, headR * 0.05, headR * 0.17, i * 0.2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.beginPath();
-      ctx.ellipse(cx - headR * 0.6, hy - headR * 0.1, headR * 0.05, headR * 0.15, 0.4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx + headR * 0.6, hy - headR * 0.1, headR * 0.05, headR * 0.15, -0.4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Ears IN FRONT of head (triangle, pig)
-    function drawEarTriangle(side) {
-      const baseX = cx + side * headR * 0.55;
-      const baseY = hy - headR * 0.45;
-      const tipX  = cx + side * headR * 0.95;
-      const tipY  = hy - headR * 1.3;
-      const backX = cx + side * headR * 0.15;
-      const backY = hy - headR * 0.78;
-      const p = () => {
-        ctx.moveTo(baseX, baseY);
-        ctx.lineTo(tipX, tipY);
-        ctx.lineTo(backX, backY);
-        ctx.closePath();
-      };
-      shadedFill(p, earColor, (baseX+backX)/2, (baseY+backY)/2, headR * 0.8);
-      inkStroke(p);
-      // inner ear (pink)
-      ctx.fillStyle = innerEar;
-      ctx.beginPath();
-      ctx.moveTo(cx + side * headR * 0.5, hy - headR * 0.5);
-      ctx.lineTo(cx + side * headR * 0.85, hy - headR * 1.1);
-      ctx.lineTo(cx + side * headR * 0.22, hy - headR * 0.78);
-      ctx.closePath();
-      ctx.fill();
-    }
-    function drawEarPig(side) {
-      const p = () => {
-        ctx.moveTo(cx + side * headR * 0.4, hy - headR * 0.55);
-        ctx.quadraticCurveTo(cx + side * headR * 0.75, hy - headR * 0.35,
-                             cx + side * headR * 0.15, hy - headR * 0.8);
-        ctx.closePath();
-      };
-      shadedFill(p, earColor, cx + side * headR * 0.35, hy - headR * 0.65, headR * 0.5);
-      inkStroke(p);
-      ctx.fillStyle = innerEar;
-      ctx.beginPath();
-      ctx.moveTo(cx + side * headR * 0.42, hy - headR * 0.55);
-      ctx.quadraticCurveTo(cx + side * headR * 0.68, hy - headR * 0.38,
-                           cx + side * headR * 0.2, hy - headR * 0.78);
-      ctx.closePath(); ctx.fill();
-    }
-    if (ear === 'triangle') { drawEarTriangle(-1); drawEarTriangle(1); }
-    if (ear === 'pig')      { drawEarPig(-1);      drawEarPig(1); }
-
-    // Horns (cow)
-    if (accent === 'cow_spots') {
-      const lh = () => ctx.ellipse(cx - headR * 0.85, hy - headR * 0.45, headR * 0.18, headR * 0.09, -0.4, 0, Math.PI * 2);
-      const rh = () => ctx.ellipse(cx + headR * 0.85, hy - headR * 0.45, headR * 0.18, headR * 0.09, 0.4, 0, Math.PI * 2);
-      shadedFill(lh, '#f5e8a0', cx - headR * 0.9, hy - headR * 0.5, headR * 0.25);
-      shadedFill(rh, '#f5e8a0', cx + headR * 0.8, hy - headR * 0.5, headR * 0.25);
-      inkStroke(lh); inkStroke(rh);
-    }
-
-    // ===== Face features =====
-    // Closed drowsy eyes (shiba-style) for most animals; open for panda/tabby/black cat
-    const openEye = (accent === 'panda_eye' || animal.id === 'blackcat' || animal.id === 'tabby' || animal.id === 'husky');
-    const eyeY = hy - headR * 0.04;
-    const eyeOffset = headR * 0.32;
-    const eyeR = headR * 0.11;
-
-    if (accent === 'panda_eye') {
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(cx - eyeOffset, eyeY, eyeR * 0.9, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx + eyeOffset, eyeY, eyeR * 0.9, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#2a1a12';
-      ctx.beginPath(); ctx.arc(cx - eyeOffset, eyeY, eyeR * 0.5, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx + eyeOffset, eyeY, eyeR * 0.5, 0, Math.PI * 2); ctx.fill();
-    } else if (openEye) {
-      ctx.fillStyle = '#2a1a12';
-      ctx.beginPath();
-      ctx.ellipse(cx - eyeOffset, eyeY, eyeR * 0.9, eyeR, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx + eyeOffset, eyeY, eyeR * 0.9, eyeR, 0, 0, Math.PI * 2);
-      ctx.fill();
+    if (img.complete && img.naturalWidth > 0) {
+      const r = img.naturalWidth / img.naturalHeight;
+      let dw, dh;
+      if (r > 1) { dw = targetSize; dh = targetSize / r; }
+      else       { dh = targetSize; dw = targetSize * r; }
+      halfW = dw / 2; halfH = dh / 2;
+      ctx.drawImage(img, cx - halfW, cy - halfH, dw, dh);
     } else {
-      // closed drowsy eyes — curved "U" shape
-      ctx.strokeStyle = '#3a2418';
-      ctx.lineWidth = Math.max(2, headR * 0.055);
-      ctx.lineCap = 'round';
-      [-1, 1].forEach(side => {
-        const ex = cx + side * eyeOffset;
-        ctx.beginPath();
-        ctx.moveTo(ex - headR * 0.12, eyeY + headR * 0.01);
-        ctx.quadraticCurveTo(ex, eyeY - headR * 0.09, ex + headR * 0.12, eyeY + headR * 0.01);
-        ctx.stroke();
-        // short lash line up
-        ctx.beginPath();
-        ctx.moveTo(ex + side * headR * 0.14, eyeY - headR * 0.03);
-        ctx.lineTo(ex + side * headR * 0.22, eyeY - headR * 0.09);
-        ctx.stroke();
-      });
-    }
-    // eye sparkle (only when open)
-    if (openEye) {
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#eaeaea';
       ctx.beginPath();
-      ctx.arc(cx - eyeOffset + eyeR * 0.3, eyeY - eyeR * 0.3, eyeR * 0.32, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy, targetSize / 2, targetSize / 2 * 0.85, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx + eyeOffset + eyeR * 0.3, eyeY - eyeR * 0.3, eyeR * 0.32, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Cheek blush
-    ctx.fillStyle = 'rgba(255,130,155,0.5)';
-    ctx.beginPath();
-    ctx.arc(cx - headR * 0.5, hy + headR * 0.28, headR * 0.14, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx + headR * 0.5, hy + headR * 0.28, headR * 0.14, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Nose
-    let noseX = cx, noseY = hy + headR * 0.22;
-    let noseColor = '#2a1a12';
-    if (accent === 'pig_nose') { noseColor = '#f28aa0'; }
-    else if (accent === 'cow_spots') { noseColor = '#f28aa0'; noseY = hy + headR * 0.3; }
-
-    if (accent === 'pig_nose') {
-      ctx.fillStyle = noseColor;
-      ctx.beginPath();
-      ctx.ellipse(noseX, noseY, headR * 0.28, headR * 0.2, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#b65570';
-      ctx.beginPath(); ctx.arc(noseX - headR * 0.09, noseY, headR * 0.045, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(noseX + headR * 0.09, noseY, headR * 0.045, 0, Math.PI * 2); ctx.fill();
-    } else if (accent === 'cow_spots') {
-      ctx.fillStyle = noseColor;
-      ctx.beginPath();
-      ctx.ellipse(noseX, noseY, headR * 0.32, headR * 0.22, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#b65570';
-      ctx.beginPath(); ctx.arc(noseX - headR * 0.1, noseY, headR * 0.04, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(noseX + headR * 0.1, noseY, headR * 0.04, 0, Math.PI * 2); ctx.fill();
-    } else {
-      // rounded triangular nose
-      ctx.fillStyle = noseColor;
-      ctx.beginPath();
-      ctx.moveTo(noseX - headR * 0.11, noseY - headR * 0.05);
-      ctx.quadraticCurveTo(noseX, noseY - headR * 0.1, noseX + headR * 0.11, noseY - headR * 0.05);
-      ctx.quadraticCurveTo(noseX + headR * 0.09, noseY + headR * 0.08, noseX, noseY + headR * 0.09);
-      ctx.quadraticCurveTo(noseX - headR * 0.09, noseY + headR * 0.08, noseX - headR * 0.11, noseY - headR * 0.05);
-      ctx.closePath();
-      ctx.fill();
-      // highlight
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.beginPath();
-      ctx.ellipse(noseX - headR * 0.03, noseY - headR * 0.03, headR * 0.03, headR * 0.02, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Mouth (line down + smile)
-    if (accent !== 'pig_nose' && accent !== 'cow_spots') {
-      ctx.strokeStyle = '#3a2418';
-      ctx.lineWidth = Math.max(1.8, headR * 0.035);
-      ctx.lineCap = 'round';
-      // vertical from nose
-      ctx.beginPath();
-      ctx.moveTo(cx, noseY + headR * 0.09);
-      ctx.lineTo(cx, hy + headR * 0.42);
-      ctx.stroke();
-      // left smile
-      ctx.beginPath();
-      ctx.moveTo(cx, hy + headR * 0.42);
-      ctx.quadraticCurveTo(cx - headR * 0.12, hy + headR * 0.52, cx - headR * 0.22, hy + headR * 0.44);
-      ctx.stroke();
-      // right smile
-      ctx.beginPath();
-      ctx.moveTo(cx, hy + headR * 0.42);
-      ctx.quadraticCurveTo(cx + headR * 0.12, hy + headR * 0.52, cx + headR * 0.22, hy + headR * 0.44);
-      ctx.stroke();
-    } else {
-      ctx.strokeStyle = '#3a2418';
-      ctx.lineWidth = headR * 0.03;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.arc(cx, noseY + headR * 0.2, headR * 0.13, 0.25, Math.PI - 0.25);
-      ctx.stroke();
-    }
-
-    // ===== Fur texture (soft strokes at edges) =====
-    if (accent !== 'panda_eye' && accent !== 'cow_spots') {
-      ctx.strokeStyle = shade(animal.body, -0.3);
-      ctx.lineWidth = Math.max(1, Math.min(w, h) * 0.003);
-      ctx.lineCap = 'round';
-      let s = 4729;
-      const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-      // body edge fur
-      for (let i = 0; i < 26; i++) {
-        const a = rnd() * Math.PI * 2;
-        const r = bodyR * (0.92 + rnd() * 0.18);
-        const x1 = cx + Math.cos(a) * r;
-        const y1 = cy + Math.sin(a) * r * 0.88;
-        const len = bodyR * (0.06 + rnd() * 0.05);
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x1 + Math.cos(a) * len, y1 + Math.sin(a) * len);
-        ctx.stroke();
-      }
-      // head edge fur
-      for (let i = 0; i < 14; i++) {
-        const a = rnd() * Math.PI * 2;
-        const r = headR * (0.95 + rnd() * 0.12);
-        const x1 = cx + Math.cos(a) * r;
-        const y1 = hy + Math.sin(a) * r;
-        const len = headR * (0.06 + rnd() * 0.05);
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x1 + Math.cos(a) * len, y1 + Math.sin(a) * len);
-        ctx.stroke();
-      }
-    }
-
-    // Decorative flower (skip rabbit with long ears)
-    if (ear !== 'long') {
-      const fx = cx - headR * 0.72;
-      const fy = hy - headR * 0.78;
-      ctx.fillStyle = '#ffd6e3';
-      for (let k = 0; k < 5; k++) {
-        const a = (k / 5) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.arc(fx + Math.cos(a) * headR * 0.1, fy + Math.sin(a) * headR * 0.1, headR * 0.08, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.fillStyle = '#ffde59';
-      ctx.beginPath();
-      ctx.arc(fx, fy, headR * 0.06, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = '#888';
+      ctx.font = 'bold ' + Math.round(targetSize * 0.22) + 'px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(animal.emoji || '?', cx, cy);
     }
 
     ctx.restore();
-    return { cx, cy, bodyR, hy, headR };
+    return { cx, cy, halfW, halfH };
   }
 
-  // Draw fur mess layer onto a separate canvas
+  // Draw fur mess layer covering the image area
   function drawFurLayer(ctx, w, h, animal, geom) {
-    const { cx, cy, bodyR, hy, headR } = geom;
+    const { cx, cy, halfW, halfH } = geom;
     ctx.save();
     ctx.fillStyle = animal.furColor;
 
-    // clip to a region that covers body+head so fur stays on the animal-ish area
-    // Actually we want fur to look messy and go beyond - so draw big puffs around body/head
-    const puffCount = 260;
+    const puffCount = 360;
     for (let i = 0; i < puffCount; i++) {
-      // Random position clustered around head+body
-      let x, y, r;
-      if (Math.random() < 0.45) {
-        // head
-        const a = Math.random() * Math.PI * 2;
-        const rr = Math.random() * headR * 1.25;
-        x = cx + Math.cos(a) * rr;
-        y = hy + Math.sin(a) * rr * 0.95;
-      } else {
-        // body
-        const a = Math.random() * Math.PI * 2;
-        const rr = Math.random() * bodyR * 1.15;
-        x = cx + Math.cos(a) * rr * 1.05;
-        y = cy + Math.sin(a) * rr * 0.95;
-      }
-      r = (Math.random() * 0.35 + 0.25) * Math.min(headR, bodyR) * 0.5;
-      const alpha = 0.55 + Math.random() * 0.35;
-      ctx.globalAlpha = alpha;
-      // slight color variation
-      ctx.fillStyle = animal.furColor;
+      const a = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.random());
+      const x = cx + Math.cos(a) * r * halfW * 1.1;
+      const y = cy + Math.sin(a) * r * halfH * 1.1;
+      const pr = (0.05 + Math.random() * 0.1) * Math.min(halfW, halfH);
+      ctx.globalAlpha = 0.55 + Math.random() * 0.35;
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.arc(x, y, pr, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // darker outline puffs for texture
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = '#4a2f18';
-    for (let i = 0; i < 40; i++) {
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = '#3a2418';
+    for (let i = 0; i < 60; i++) {
       const a = Math.random() * Math.PI * 2;
-      const rr = Math.random() * bodyR * 1.1;
-      const x = cx + Math.cos(a) * rr;
-      const y = cy + Math.sin(a) * rr * 0.9;
-      const r = Math.random() * 8 + 3;
+      const r = Math.sqrt(Math.random());
+      const x = cx + Math.cos(a) * r * halfW;
+      const y = cy + Math.sin(a) * r * halfH;
+      const pr = 3 + Math.random() * 6;
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.arc(x, y, pr, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1216,33 +721,45 @@
     canvas.style.height = rect.height + 'px';
   }
 
-  function setupGameCanvases(animal) {
+  function setupGameCanvases(animal, done) {
     sizeCanvas();
     const w = canvas.width, h = canvas.height;
+    const img = loadImage(animal.image);
 
-    // clean canvas (background)
-    cleanCanvas = document.createElement('canvas');
-    cleanCanvas.width = w; cleanCanvas.height = h;
-    cleanCtx = cleanCanvas.getContext('2d');
-    geom = drawCleanAnimal(cleanCtx, w, h, animal);
+    function build() {
+      cleanCanvas = document.createElement('canvas');
+      cleanCanvas.width = w; cleanCanvas.height = h;
+      cleanCtx = cleanCanvas.getContext('2d');
+      geom = drawCleanAnimal(cleanCtx, w, h, animal);
 
-    // fur canvas (on top layer)
-    furCanvas = document.createElement('canvas');
-    furCanvas.width = w; furCanvas.height = h;
-    furCtx = furCanvas.getContext('2d');
-    drawFurLayer(furCtx, w, h, animal, geom);
+      furCanvas = document.createElement('canvas');
+      furCanvas.width = w; furCanvas.height = h;
+      furCtx = furCanvas.getContext('2d');
+      drawFurLayer(furCtx, w, h, animal, geom);
 
-    // Count opaque pixels once for progress measure (sampled for speed)
-    const imgData = furCtx.getImageData(0, 0, w, h).data;
-    let count = 0;
-    const step = 16; // sample every 16 pixels
-    for (let i = 3; i < imgData.length; i += 4 * step) {
-      if (imgData[i] > 20) count++;
+      const imgData = furCtx.getImageData(0, 0, w, h).data;
+      let count = 0;
+      const step = 16;
+      for (let i = 3; i < imgData.length; i += 4 * step) {
+        if (imgData[i] > 20) count++;
+      }
+      totalFurPixels = count;
+      erasedPixels = 0;
+
+      compose();
+      if (done) done();
     }
-    totalFurPixels = count;
-    erasedPixels = 0;
 
-    compose();
+    if (img.complete && img.naturalWidth > 0) {
+      build();
+    } else {
+      // wait for image, but cap at 4s so a missing file falls through to placeholder
+      let settled = false;
+      const finish = () => { if (settled) return; settled = true; build(); };
+      img.addEventListener('load', finish, { once: true });
+      img.addEventListener('error', finish, { once: true });
+      setTimeout(finish, 4000);
+    }
   }
 
   function compose() {
@@ -1369,14 +886,15 @@
     currentAnimal = animal;
     goalThumb.textContent = animal.emoji;
     showScene('play');
-    // wait a frame so the canvas has size
+    // wait a frame so the canvas has size, then setup (waits for image), then countdown
     requestAnimationFrame(() => {
-      setupGameCanvases(animal);
-      showCountdown(() => {
-        running = true;
-        timeLeft = gameDuration;
-        lastTs = performance.now();
-        tick();
+      setupGameCanvases(animal, () => {
+        showCountdown(() => {
+          running = true;
+          timeLeft = gameDuration;
+          lastTs = performance.now();
+          tick();
+        });
       });
     });
   }
@@ -1420,7 +938,7 @@
       const pct = Math.max(0, Math.min(1, timeLeft / gameDuration));
       timerFill.style.width = (pct * 100) + '%';
       timerFill.style.backgroundPosition = ((1 - pct) * 100) + '% 0%';
-      if (r >= 0.95) {
+      if (r >= 1.0) {
         running = false;
         endGame(true);
         return;
@@ -1452,17 +970,18 @@
     const title = document.getElementById('resultTitle');
     const scoreBadge = document.getElementById('scoreBadge');
     scoreBadge.textContent = 'きれいさ ' + pct + '%';
-    if (clearedEarly || pct >= 95) {
+    // CLEAR is reserved for 100%. Otherwise show encouraging "almost / keep trying" messages.
+    if (clearedEarly || pct >= 100) {
       title.textContent = 'ぜんぶ ピカピカ！すごい！';
       playFanfare();
     } else if (pct >= 80) {
-      title.textContent = 'たいへん よくできました！';
-      playFanfare();
+      title.textContent = 'もうすこしで かんぺき！';
+      playDing(784); setTimeout(()=>playDing(988), 150);
     } else if (pct >= 50) {
-      title.textContent = 'じょうず！';
-      playDing(784); setTimeout(()=>playDing(1046), 150);
+      title.textContent = 'じょうず！もうちょっと！';
+      playDing(660); setTimeout(()=>playDing(784), 150);
     } else {
-      title.textContent = 'もうちょっと！';
+      title.textContent = 'もうちょっと がんばろう！';
       playDing(523);
     }
 
