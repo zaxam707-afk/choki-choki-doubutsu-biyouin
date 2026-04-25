@@ -527,11 +527,13 @@
   ];
 
   // ========= Image preloader =========
+  // Bump ASSET_VERSION when assets change to bypass stale browser cache (incl. cached 404s)
+  const ASSET_VERSION = 'v2';
   const imageCache = {};
   function loadImage(src) {
     if (imageCache[src]) return imageCache[src];
     const img = new Image();
-    img.src = src;
+    img.src = src + '?' + ASSET_VERSION;
     imageCache[src] = img;
     return img;
   }
@@ -651,6 +653,33 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(animal.emoji || '?', cx, cy);
+
+      // late-load recovery: retry once the image (or a fresh fetch) is ready
+      if (img.naturalWidth === 0) {
+        const retry = new Image();
+        retry.crossOrigin = 'anonymous';
+        retry.onload = () => {
+          imageCache[animal.image] = retry;
+          if (currentAnimal && currentAnimal.id === animal.id && cleanCtx === ctx) {
+            // wipe the placeholder area and redraw the image properly
+            const r2 = retry.naturalWidth / retry.naturalHeight;
+            let dw, dh;
+            if (r2 > 1) { dw = targetSize; dh = targetSize / r2; }
+            else        { dh = targetSize; dw = targetSize * r2; }
+            // clear the placeholder oval
+            ctx.save();
+            ctx.fillStyle = '#fff5e1';
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, targetSize / 2 + 4, targetSize / 2 * 0.85 + 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            ctx.drawImage(retry, cx - dw / 2, cy - dh / 2, dw, dh);
+            if (typeof compose === 'function') compose();
+          }
+        };
+        // cache-bust to bypass any previously cached 404
+        retry.src = animal.image + '?v=' + Date.now();
+      }
     }
 
     ctx.restore();
