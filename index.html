@@ -686,84 +686,113 @@
     return { cx, cy, halfW, halfH };
   }
 
-  // Draw fur, then mask it so it only covers the animal silhouette (slightly dilated)
+  // Build a dilated/feathered silhouette mask from the animal image
+  function buildSilhouetteMask(w, h, img, cx, cy, halfW, halfH) {
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = w; maskCanvas.height = h;
+    const mctx = maskCanvas.getContext('2d');
+
+    const ratio = img.naturalWidth / img.naturalHeight;
+    let dw, dh;
+    if (ratio > 1) { dw = halfW * 2; dh = (halfW * 2) / ratio; }
+    else           { dh = halfH * 2; dw = (halfH * 2) * ratio; }
+
+    const dilate = Math.min(halfW, halfH) * 0.10;
+    for (let i = 0; i < 32; i++) {
+      const ang = (i / 32) * Math.PI * 2;
+      const dist = dilate * (0.55 + Math.random() * 0.45);
+      mctx.drawImage(img, cx - dw / 2 + Math.cos(ang) * dist, cy - dh / 2 + Math.sin(ang) * dist, dw, dh);
+    }
+    if ('filter' in mctx) {
+      mctx.filter = 'blur(' + Math.max(2, Math.min(halfW, halfH) * 0.012) + 'px)';
+    }
+    mctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+    mctx.filter = 'none';
+    return { maskCanvas, mctx };
+  }
+
+  // Draw fur strictly within the animal silhouette (with shaggy overshoot)
   function drawFurLayer(ctx, w, h, animal, geom) {
     const { cx, cy, halfW, halfH } = geom;
     const img = loadImage(animal.image);
     ctx.save();
 
-    // Layer 1: dense fur puffs sprayed across the image bounds (overshooting on purpose)
-    ctx.fillStyle = animal.furColor;
-    const puffCount = 600;
-    for (let i = 0; i < puffCount; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const r = Math.sqrt(Math.random());
-      const x = cx + Math.cos(a) * r * halfW * 1.25;
-      const y = cy + Math.sin(a) * r * halfH * 1.25;
-      const pr = (0.04 + Math.random() * 0.09) * Math.min(halfW, halfH);
-      ctx.globalAlpha = 0.7 + Math.random() * 0.3;
-      ctx.beginPath();
-      ctx.arc(x, y, pr, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    let positions = [];
+    let maskCanvas = null;
 
-    // Layer 2: darker matted/dirty streaks for texture
-    ctx.globalAlpha = 0.32;
-    ctx.fillStyle = '#3a2418';
-    for (let i = 0; i < 120; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const r = Math.sqrt(Math.random());
-      const x = cx + Math.cos(a) * r * halfW;
-      const y = cy + Math.sin(a) * r * halfH;
-      const pr = 3 + Math.random() * 6;
-      ctx.beginPath();
-      ctx.arc(x, y, pr, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Layer 3: a few long stray tufts pointing outward for that overgrown look
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = animal.furColor;
-    ctx.lineCap = 'round';
-    for (let i = 0; i < 40; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const inner = 0.7 + Math.random() * 0.25;
-      const outer = 1.0 + Math.random() * 0.15;
-      const x1 = cx + Math.cos(a) * halfW * inner;
-      const y1 = cy + Math.sin(a) * halfH * inner;
-      const x2 = cx + Math.cos(a) * halfW * outer;
-      const y2 = cy + Math.sin(a) * halfH * outer;
-      ctx.lineWidth = 4 + Math.random() * 6;
-      ctx.strokeStyle = animal.furColor;
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-
-    // Mask: keep fur only where the animal silhouette (slightly dilated for shaggy edges) is opaque
     if (img.complete && img.naturalWidth > 0) {
-      const maskCanvas = document.createElement('canvas');
-      maskCanvas.width = w; maskCanvas.height = h;
-      const mctx = maskCanvas.getContext('2d');
-
-      const ratio = img.naturalWidth / img.naturalHeight;
-      let dw, dh;
-      if (ratio > 1) { dw = halfW * 2; dh = (halfW * 2) / ratio; }
-      else           { dh = halfH * 2; dw = (halfH * 2) * ratio; }
-
-      // stamp the silhouette in many directions to dilate it (shaggy outline)
-      const dilate = Math.min(halfW, halfH) * 0.10;
-      for (let i = 0; i < 32; i++) {
-        const ang = (i / 32) * Math.PI * 2;
-        const dist = dilate * (0.55 + Math.random() * 0.45);
-        mctx.drawImage(img, cx - dw / 2 + Math.cos(ang) * dist, cy - dh / 2 + Math.sin(ang) * dist, dw, dh);
+      const built = buildSilhouetteMask(w, h, img, cx, cy, halfW, halfH);
+      maskCanvas = built.maskCanvas;
+      const mctx = built.mctx;
+      try {
+        const mData = mctx.getImageData(0, 0, w, h).data;
+        const step = Math.max(2, Math.floor(Math.min(halfW, halfH) / 70));
+        for (let py = 0; py < h; py += step) {
+          for (let px = 0; px < w; px += step) {
+            if (mData[(py * w + px) * 4 + 3] > 100) {
+              positions.push(px, py);
+            }
+          }
+        }
+      } catch (e) {
+        positions = [];
       }
-      // base silhouette + slight blur to feather edges
-      if ('filter' in mctx) {
-        mctx.filter = 'blur(' + Math.max(2, Math.min(halfW, halfH) * 0.012) + 'px)';
-      }
-      mctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
-      mctx.filter = 'none';
+    }
 
+    const minDim = Math.min(halfW, halfH);
+
+    if (positions.length > 0) {
+      const N = positions.length / 2; // each position is 2 entries (x,y)
+      // Aim for very dense coverage — many puffs per silhouette sample point
+      const puffTarget = Math.min(2400, Math.max(1200, Math.floor(N * 1.2)));
+
+      // Layer 1: base fur color, lots of overlapping puffs
+      ctx.fillStyle = animal.furColor;
+      for (let i = 0; i < puffTarget; i++) {
+        const j = ((Math.random() * N) | 0) * 2;
+        const px = positions[j];
+        const py = positions[j + 1];
+        const ox = (Math.random() - 0.5) * minDim * 0.05;
+        const oy = (Math.random() - 0.5) * minDim * 0.05;
+        const pr = (0.035 + Math.random() * 0.08) * minDim;
+        ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+        ctx.beginPath();
+        ctx.arc(px + ox, py + oy, pr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Layer 2: darker matted texture
+      ctx.fillStyle = '#3a2418';
+      ctx.globalAlpha = 0.3;
+      const dirtCount = Math.min(400, Math.floor(puffTarget / 6));
+      for (let i = 0; i < dirtCount; i++) {
+        const j = ((Math.random() * N) | 0) * 2;
+        const px = positions[j];
+        const py = positions[j + 1];
+        ctx.beginPath();
+        ctx.arc(px + (Math.random() - 0.5) * 8, py + (Math.random() - 0.5) * 8, 3 + Math.random() * 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      // Fallback (image not ready): broad ellipse fur
+      ctx.fillStyle = animal.furColor;
+      for (let i = 0; i < 600; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random());
+        const x = cx + Math.cos(a) * r * halfW * 1.1;
+        const y = cy + Math.sin(a) * r * halfH * 1.1;
+        const pr = (0.05 + Math.random() * 0.1) * minDim;
+        ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+        ctx.beginPath();
+        ctx.arc(x, y, pr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Final clip to dilated silhouette
+    if (maskCanvas) {
       ctx.globalCompositeOperation = 'destination-in';
       ctx.drawImage(maskCanvas, 0, 0);
     }
